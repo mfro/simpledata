@@ -1,0 +1,9 @@
+{
+  "name": "simpledata-web",
+  "version": "0.0.0",
+  "private": true,
+  "main": "lib.ts",
+  "devDependencies": {
+    "typescript": "^4.1.3"
+  }
+}
