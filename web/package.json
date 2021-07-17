@@ -1,8 +1,11 @@
 {
-  "name": "simpledata-web",
+  "name": "@mfro/simpledata.web",
   "version": "0.0.0",
   "private": true,
-  "main": "lib.ts",
+  "main": "src/lib.ts",
+  "dependencies": {
+    "@mfro/simpledata.common": "0.0.0"
+  },
   "devDependencies": {
     "typescript": "^4.1.3"
   }

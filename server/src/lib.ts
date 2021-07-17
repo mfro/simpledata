@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 
 import WebSocket from 'ws';
 import { assert } from '@mfro/ts-common/assert';
-import { DataModelDefinition, Json, MutationsType } from 'simpledata-common';
+import { DataModelDefinition, Json, MutationsType } from '@mfro/simpledata.common';
 
 const dataDir = 'data';
 const active = new Map<string, StateEntry>();
@@ -14,7 +14,7 @@ interface StateEntry {
 }
 
 interface Update {
-  mutation: string;
+  name: string;
   args: any[];
 }
 
@@ -32,7 +32,7 @@ async function saveFile<TData, TMutations extends MutationsType, TSave extends J
   await fs.writeFile(filePath, raw);
 }
 
-export function host<TData, TMutations extends MutationsType, TSave extends Json>(server: WebSocket.Server, model: DataModelDefinition<TData, TMutations, TSave>) {
+export function host<TData, TMutations extends MutationsType, TSave extends Json>(model: DataModelDefinition<TData, TMutations, TSave>, server: WebSocket.Server) {
   server.on('connection', async (socket, request) => {
     assert(request.url != null, 'url');
 
@@ -43,13 +43,12 @@ export function host<TData, TMutations extends MutationsType, TSave extends Json
 
     let state = active.get(code);
     try {
-
       if (!state) active.set(code, state = {
         data: await loadFile(filePath, model),
         sockets: new Set,
       });
     } catch (e) {
-      console.log(`not found: ${code}`)
+      console.log(`error: ${code} ${e}`)
       return socket.close();
     }
 
@@ -62,12 +61,10 @@ export function host<TData, TMutations extends MutationsType, TSave extends Json
 
       const update: Update = JSON.parse(data);
 
-      model.mutations[update.mutation](state.data, ...update.args as any);
+      model.mutations[update.name](state.data, ...update.args as any);
 
       for (const other of state.sockets) {
-        if (other != socket) {
-          other.send(data);
-        }
+        other.send(data);
       }
 
       await saveFile(filePath, model, state.data)

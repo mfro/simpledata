@@ -1,11 +1,11 @@
 {
-  "name": "simpledata-server",
+  "name": "@mfro/simpledata.server",
   "version": "0.0.0",
   "private": true,
-  "main": "lib.ts",
+  "main": "src/lib.ts",
   "dependencies": {
     "@mfro/ts-common": "mfro/ts-common",
-    "simpledata-common": "1.0.0",
+    "@mfro/simpledata.common": "0.0.0",
     "ws": "^7.5.3"
   },
   "devDependencies": {

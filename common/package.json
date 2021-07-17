@@ -1,8 +1,8 @@
 {
-  "name": "simpledata-common",
-  "version": "1.0.0",
+  "name": "@mfro/simpledata.common",
+  "version": "0.0.0",
   "private": true,
-  "main": "lib.ts",
+  "main": "src/lib.ts",
   "devDependencies": {
     "typescript": "^4.1.3"
   }
