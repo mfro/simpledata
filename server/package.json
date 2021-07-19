@@ -6,6 +6,7 @@
   "dependencies": {
     "@mfro/ts-common": "mfro/ts-common",
     "@mfro/simpledata.common": "0.0.0",
+    "isomorphic-git": "^1.9.2",
     "ws": "^7.5.3"
   },
   "devDependencies": {

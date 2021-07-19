@@ -1,12 +1,10 @@
 import path from 'path';
-import { promises as fs } from 'fs';
+import fsModule, { promises as fs } from 'fs';
 
 import WebSocket from 'ws';
+import git from 'isomorphic-git';
 import { assert } from '@mfro/ts-common/assert';
 import { DataModelDefinition, Json, MutationsType } from '@mfro/simpledata.common';
-
-const dataDir = 'data';
-const active = new Map<string, StateEntry>();
 
 interface StateEntry {
   data: any;
@@ -32,7 +30,40 @@ async function saveFile<TData, TMutations extends MutationsType, TSave extends J
   await fs.writeFile(filePath, raw);
 }
 
+async function makeCommit(dataDir: string, fileName: string, message: string) {
+  await git.add({
+    fs: fsModule, dir: dataDir,
+    filepath: fileName,
+  });
+
+  return await git.commit({
+    fs: fsModule, dir: dataDir,
+    message: message,
+    author: {
+      name: 'simpledata',
+      email: 'simpledata@mfro.me',
+    },
+  });
+}
+
+async function loadLatestHash(dataDir: string) {
+  const log = await git.log({
+    fs: fsModule, dir: dataDir,
+    depth: 1,
+  });
+
+  return log[0].oid;
+}
+
 export function host<TData, TMutations extends MutationsType, TSave extends Json>(model: DataModelDefinition<TData, TMutations, TSave>, server: WebSocket.Server) {
+  const dataDir = 'data';
+  const active = new Map<string, StateEntry>();
+  let latestHash: string;
+
+  loadLatestHash(dataDir).then(hash => {
+    latestHash = hash;
+  });
+
   server.on('connection', async (socket, request) => {
     assert(request.url != null, 'url');
 
@@ -67,7 +98,18 @@ export function host<TData, TMutations extends MutationsType, TSave extends Json
         other.send(data);
       }
 
-      await saveFile(filePath, model, state.data)
+      await saveFile(filePath, model, state.data);
+
+      const status = await git.status({
+        fs: fsModule, dir: dataDir,
+        filepath: code,
+      });
+
+      const message = `${update.name}\n\n${JSON.stringify(update.args)}`;
+
+      latestHash = status == 'unmodified'
+        ? await loadLatestHash(dataDir)
+        : await makeCommit(dataDir, code, message);
     });
 
     socket.on('close', e => {
