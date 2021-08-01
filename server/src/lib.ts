@@ -4,7 +4,7 @@ import fsModule, { promises as fs } from 'fs';
 import WebSocket from 'ws';
 import git from 'isomorphic-git';
 import { assert } from '@mfro/ts-common/assert';
-import { DataModelDefinition, Json, MutationsType } from '@mfro/simpledata.common';
+import { DataModelDefinition, MutationsType } from '@mfro/simpledata.common';
 
 interface StateEntry {
   data: any;
@@ -16,14 +16,14 @@ interface Update {
   args: any[];
 }
 
-async function loadFile<TData, TMutations extends MutationsType, TSave extends Json>(filePath: string, model: DataModelDefinition<TData, TMutations, TSave>) {
+async function loadFile<TData, TMutations extends MutationsType, TSave>(filePath: string, model: DataModelDefinition<TData, TMutations, TSave>) {
   const raw = await fs.readFile(filePath);
   const str = raw.toString('utf8');
   const json = JSON.parse(str);
   return model.load(json);
 }
 
-async function saveFile<TData, TMutations extends MutationsType, TSave extends Json>(filePath: string, model: DataModelDefinition<TData, TMutations, TSave>, value: TData) {
+async function saveFile<TData, TMutations extends MutationsType, TSave>(filePath: string, model: DataModelDefinition<TData, TMutations, TSave>, value: TData) {
   const json = model.save(value);
   const str = JSON.stringify(json, undefined, '  ');
   const raw = Buffer.from(str, 'utf8');
@@ -55,8 +55,7 @@ async function loadLatestHash(dataDir: string) {
   return log[0].oid;
 }
 
-export function host<TData, TMutations extends MutationsType, TSave extends Json>(model: DataModelDefinition<TData, TMutations, TSave>, server: WebSocket.Server) {
-  const dataDir = 'data';
+export function host<TData, TMutations extends MutationsType, TSave>(model: DataModelDefinition<TData, TMutations, TSave>, server: WebSocket.Server, dataDir: string) {
   const active = new Map<string, StateEntry>();
   let latestHash: string;
 
